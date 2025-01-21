@@ -15,7 +15,7 @@ package com.raindrops.enums;
 /**
  * EntityTypeEnum
  *
- * @author 南京晓鸣信息技术有限公司
+ * @author raindrops
  */
 public enum EntityTypeEnum {
 

@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 /**
  * GameApplication
  *
- * @author 南京晓鸣信息技术有限公司
+ * @author raindrops
  */
 public class ClearApplication extends GameApplication {
 
@@ -48,11 +48,11 @@ public class ClearApplication extends GameApplication {
 
     private static final Map<String, int[]> PARENT_MAP = new HashMap<>();
 
-    private static final int ICON_SIZE = 80;
+    private static final int ICON_SIZE = 85;
 
-    private static final int GRID_ROWS = 6;
+    private static final int GRID_ROWS = 10;
 
-    private static final int GRID_COLS = 6;
+    private static final int GRID_COLS = 14;
 
     private static final double OFFSET_X = 0;
 
@@ -68,15 +68,14 @@ public class ClearApplication extends GameApplication {
 
     @Override
     protected void initSettings(GameSettings settings) {
-        settings.setTitle("Happy Clear");
-        settings.setWidth(600);
-        settings.setHeight(600);
+        settings.setTitle("连连看");
+        settings.setWidth(1260);
+        settings.setHeight(820);
         settings.setVersion("1.0");
     }
 
     @Override
     protected void initGame() {
-        Font font = Font.loadFont(getClass().getResourceAsStream("/fonts/msyh.ttc"), 36);
         this.createGrid();
     }
 
@@ -160,8 +159,8 @@ public class ClearApplication extends GameApplication {
         boolean result = this.canConnect(firstEntity, secondEntity);
         if (result) {
             this.handleClear(firstEntity, secondEntity);
-            if (!this.isDead()) {
-                FXGL.getDialogService().showMessageBox("123", this::randomAllEntity);
+            if (this.isDead()) {
+                FXGL.getDialogService().showMessageBox("No puzzle can move, refresh...", this::randomAllEntity);
             }
         }
         ENTITY_LIST.clear();
@@ -316,9 +315,8 @@ public class ClearApplication extends GameApplication {
     private void createGrid() {
         RandomQueue<Integer> queue = new RandomQueue<>();
         for (int i = 0; i < (GRID_COLS - 2) * (GRID_ROWS - 2); i++) {
-            queue.offer(i % 4);
+            queue.offer(i % 16);
         }
-
 
         for (int row = 1; row < GRID_ROWS - 1; row++) {
             for (int col = 1; col < GRID_COLS - 1; col++) {
