@@ -21,6 +21,8 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.util.Duration;
 
 import java.util.*;
@@ -40,6 +42,12 @@ public class ClearApplication extends GameApplication {
 
     private static final Map<String, int[]> PARENT_MAP = new HashMap<>();
 
+    private static int puzzleNum = 32;
+
+    private static Text titleText;
+
+    private static int LEVEL = 1;
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -47,13 +55,20 @@ public class ClearApplication extends GameApplication {
     @Override
     protected void initSettings(GameSettings settings) {
         settings.setTitle("连连看");
-        settings.setWidth(1260);
-        settings.setHeight(820);
+        settings.setWidth(1280);
+        settings.setHeight(720);
         settings.setVersion("1.1");
     }
 
     @Override
     protected void initGame() {
+        FXGL.loopBGM("bgm.mp3");
+        FXGL.getGameScene().setBackgroundColor(Color.rgb(255, 255, 155));
+        titleText = new Text("第1关");
+        titleText.setFont(new Font(30));
+        titleText.setX((FXGL.getAppWidth() - titleText.getLayoutBounds().getWidth()) / 2);
+        titleText.setY((titleText.getLayoutBounds().getWidth() + OFFSET_Y) / 2);
+        FXGL.getGameScene().addUINode(titleText);
         this.createGrid();
     }
 
@@ -144,8 +159,10 @@ public class ClearApplication extends GameApplication {
         if (result) {
             this.handleClear(firstEntity, secondEntity);
             if (this.isDead()) {
-                FXGL.getDialogService().showMessageBox("No puzzle can move, refresh...", this::randomAllEntity);
+                FXGL.getDialogService().showMessageBox("无法移动，点击重组...", this::randomAllEntity);
             }
+        } else {
+            FXGL.play("clear_failed.wav");
         }
         ENTITY_LIST.clear();
         PARENT_MAP.clear();
@@ -173,13 +190,14 @@ public class ClearApplication extends GameApplication {
         path.add(new int[]{startRow, startCol});
         Collections.reverse(path);
         List<Line> lines = new ArrayList<>();
-        AtomicReference<Double> beforeX = new AtomicReference<>(startCol * ICON_SIZE + ICON_SIZE / 2d);
-        AtomicReference<Double> beforeY = new AtomicReference<>(startRow * ICON_SIZE + ICON_SIZE / 2d);
+        AtomicReference<Double> beforeX = new AtomicReference<>(startCol * ICON_SIZE + ICON_SIZE / 2d + OFFSET_X);
+        AtomicReference<Double> beforeY = new AtomicReference<>(startRow * ICON_SIZE + ICON_SIZE / 2d + OFFSET_Y);
         Timeline timeline = new Timeline();
         timeline.getKeyFrames().add(new KeyFrame(Duration.millis(30), e -> {
             if (path.size() == 0) {
                 timeline.stop();
                 lines.forEach(item -> FXGL.getGameScene().removeUINode(item));
+                FXGL.play("clear_success.wav");
                 FXGL.getGameWorld().removeEntities(firstEntity, secondEntity);
                 // 判断游戏是否结束
                 int puzzleNum = FXGL.getGameWorld().getEntitiesByType(EntityTypeEnum.PUZZLE).size();
@@ -197,8 +215,8 @@ public class ClearApplication extends GameApplication {
                 Line line = new Line();
                 line.setStartX(beforeX.get());
                 line.setStartY(beforeY.get());
-                line.setEndX(position[1] * ICON_SIZE + ICON_SIZE / 2d);
-                line.setEndY(position[0] * ICON_SIZE + ICON_SIZE / 2d);
+                line.setEndX(position[1] * ICON_SIZE + ICON_SIZE / 2d + OFFSET_X);
+                line.setEndY(position[0] * ICON_SIZE + ICON_SIZE / 2d + OFFSET_Y);
                 line.setStroke(Color.BLACK);
                 line.setStrokeWidth(5);
                 FXGL.getGameScene().addUINode(line);
@@ -297,9 +315,11 @@ public class ClearApplication extends GameApplication {
      * 初始化
      */
     private void createGrid() {
+        titleText.setText("第" + (LEVEL++) + "关");
+
         RandomQueue<Integer> queue = new RandomQueue<>();
         for (int i = 0; i < (GRID_COLS - 2) * (GRID_ROWS - 2); i++) {
-            queue.offer(i % 32);
+            queue.offer(i % puzzleNum);
         }
 
         for (int row = 1; row < GRID_ROWS - 1; row++) {
