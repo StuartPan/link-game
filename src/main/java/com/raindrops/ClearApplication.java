@@ -5,25 +5,29 @@ import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.core.collection.PropertyMap;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.entity.components.ViewComponent;
 import com.almasb.fxgl.input.Input;
 import com.raindrops.enums.EntityTypeEnum;
+import com.raindrops.factory.PuzzleFactory;
 import com.raindrops.utils.RandomQueue;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
 import javafx.util.Duration;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import static com.raindrops.constant.CommonConstant.*;
 
 /**
  * GameApplication
@@ -36,20 +40,6 @@ public class ClearApplication extends GameApplication {
 
     private static final Map<String, int[]> PARENT_MAP = new HashMap<>();
 
-    private static final int ICON_SIZE = 85;
-
-    private static final int GRID_ROWS = 10;
-
-    private static final int GRID_COLS = 14;
-
-    private static final double OFFSET_X = 0;
-
-    private static final double OFFSET_Y = 0;
-
-    private static final int[] ROW_DIRECTION = new int[]{-1, 1, 0, 0};
-
-    private static final int[] COL_DIRECTION = new int[]{0, 0, -1, 1};
-
     public static void main(String[] args) {
         launch(args);
     }
@@ -59,7 +49,7 @@ public class ClearApplication extends GameApplication {
         settings.setTitle("连连看");
         settings.setWidth(1260);
         settings.setHeight(820);
-        settings.setVersion("1.0");
+        settings.setVersion("1.1");
     }
 
     @Override
@@ -116,12 +106,15 @@ public class ClearApplication extends GameApplication {
         if (entity == null) {
             return;
         }
-        Rectangle border = new Rectangle(ICON_SIZE, ICON_SIZE);
-        border.setStroke(Color.BLACK);
-        border.setStrokeWidth(5);
-        border.setFill(null);
-        border.setId("border");
-        entity.getViewComponent().addChild(border);
+        ViewComponent viewComponent = entity.getViewComponent();
+        Optional<Node> bgOptional = viewComponent.getChildren().stream().filter(item -> "bg".equals(item.getId())).findFirst();
+        bgOptional.ifPresent(item -> {
+            ImageView bg = (ImageView) item;
+            Image image = new Image("/assets/textures/active.png");
+            bg.setImage(image);
+            bg.setTranslateX(-18);
+            bg.setTranslateY(-18);
+        });
         if (ENTITY_LIST.size() < 2) {
             ENTITY_LIST.add(entity);
         }
@@ -136,13 +129,16 @@ public class ClearApplication extends GameApplication {
         }
         Entity firstEntity = ENTITY_LIST.get(0);
         Entity secondEntity = ENTITY_LIST.get(1);
-        List<Node> firstChildren = firstEntity.getViewComponent().getChildren();
-        Optional<Node> firstNodeOptional = firstChildren.stream().filter(item -> "border".equals(item.getId())).findFirst();
-        firstNodeOptional.ifPresent(item -> firstEntity.getViewComponent().removeChild(item));
 
-        List<Node> secondChildren = secondEntity.getViewComponent().getChildren();
-        Optional<Node> secondNodeOptional = secondChildren.stream().filter(item -> "border".equals(item.getId())).findFirst();
-        secondNodeOptional.ifPresent(item -> secondEntity.getViewComponent().removeChild(item));
+        for (Entity entity : ENTITY_LIST) {
+            entity.getViewComponent().getChildren().stream().filter(item -> "bg".equals(item.getId())).forEach(item -> {
+                ImageView bg = (ImageView) item;
+                Image image = new Image("/assets/textures/pic-bg.png");
+                bg.setImage(image);
+                bg.setTranslateX(0);
+                bg.setTranslateY(0);
+            });
+        }
 
         boolean result = this.canConnect(firstEntity, secondEntity);
         if (result) {
@@ -303,20 +299,13 @@ public class ClearApplication extends GameApplication {
     private void createGrid() {
         RandomQueue<Integer> queue = new RandomQueue<>();
         for (int i = 0; i < (GRID_COLS - 2) * (GRID_ROWS - 2); i++) {
-            queue.offer(i % 16);
+            queue.offer(i % 32);
         }
 
         for (int row = 1; row < GRID_ROWS - 1; row++) {
             for (int col = 1; col < GRID_COLS - 1; col++) {
                 int iconIndex = queue.poll();
-                Entity entity = FXGL.entityBuilder()
-                        .at(OFFSET_X + col * ICON_SIZE, OFFSET_Y + row * ICON_SIZE)
-                        .viewWithBBox(FXGL.texture("icon" + iconIndex + ".png"))
-                        .type(EntityTypeEnum.PUZZLE)
-                        .build();
-                entity.setProperty("type", iconIndex);
-                entity.setProperty("col", col);
-                entity.setProperty("row", row);
+                Entity entity = PuzzleFactory.createEntity(iconIndex, row, col);
                 FXGL.getGameWorld().addEntity(entity);
             }
         }
