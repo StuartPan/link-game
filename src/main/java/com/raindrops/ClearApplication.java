@@ -400,8 +400,4 @@ public class ClearApplication extends GameApplication {
             }
         }
     }
-
-    private void enlarge(Entity entity) {
-        entity.setScaleUniform(1.1);
-    }
 }
