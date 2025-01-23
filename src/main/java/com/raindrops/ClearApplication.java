@@ -362,8 +362,7 @@ public class ClearApplication extends GameApplication {
     }
 
     private void showTip() {
-        List<Entity> entityList = FXGL.getGameWorld().getEntitiesByType(EntityTypeEnum.PUZZLE);
-        Map<Integer, List<Entity>> map = entityList.stream().collect(Collectors.groupingBy(item -> {
+        Map<Integer, List<Entity>> map = FXGL.getGameWorld().getEntitiesByType(EntityTypeEnum.PUZZLE).stream().collect(Collectors.groupingBy(item -> {
             PropertyMap properties = item.getProperties();
             return properties.getInt("type");
         }));
