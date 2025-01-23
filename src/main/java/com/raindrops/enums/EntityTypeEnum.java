@@ -10,5 +10,10 @@ public enum EntityTypeEnum {
     /**
      * 拼图
      */
-    PUZZLE
+    PUZZLE,
+
+    /**
+     * 背景图
+     */
+    BACKGROUND
 }

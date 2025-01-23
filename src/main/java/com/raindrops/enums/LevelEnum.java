@@ -22,7 +22,7 @@ public enum LevelEnum {
     /**
      * 第三关
      */
-    Level3(3, 24, 1);
+    Level3(3, 24, 0);
 
     private final int level;
 
@@ -45,7 +45,7 @@ public enum LevelEnum {
     }
 
     public static LevelEnum getByLevel(Integer value) {
-        return map.getOrDefault(value, Level1);
+        return map.getOrDefault(value, Level3);
     }
 
     public int getLevel() {

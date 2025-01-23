@@ -16,6 +16,7 @@ import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
@@ -55,20 +56,29 @@ public class ClearApplication extends GameApplication {
     protected void initSettings(GameSettings settings) {
         settings.setTitle("连连看");
         settings.setWidth(1280);
-        settings.setHeight(960);
+        settings.setHeight(720);
         settings.setVersion("1.1");
     }
 
     @Override
     protected void initGame() {
-        Font font = FXGL.getAssetLoader().loadFont("SIMYOU.TTF").newFont(30);
+        Entity entity = PuzzleFactory.createBgEntity();
+        FXGL.getGameWorld().addEntity(entity);
+        Font font = FXGL.getAssetLoader().loadFont("SIMYOU.TTF").newFont(40);
         FXGL.loopBGM("bgm.mp3");
-        FXGL.getGameScene().setBackgroundColor(Color.rgb(255, 255, 155));
         titleText = new Text();
         titleText.setFont(font);
-        titleText.setX((FXGL.getAppWidth() - titleText.getLayoutBounds().getWidth()) / 2);
         titleText.setY(titleText.getLayoutBounds().getHeight() + OFFSET_Y);
         FXGL.getGameScene().addUINode(titleText);
+
+        Button button = new Button("提示");
+        button.setLayoutX(OFFSET_X);
+        button.setLayoutY(OFFSET_Y);
+        button.setOnAction(e -> {
+            this.showTip();
+        });
+        FXGL.getGameScene().addUINode(button);
+
         this.createGrid();
     }
 
@@ -79,6 +89,7 @@ public class ClearApplication extends GameApplication {
             MouseButton button = event.getButton();
             if (button == MouseButton.PRIMARY) {
                 Entity clickedEntity = FXGL.getGameWorld().getEntitiesInRange(new Rectangle2D(event.getX(), event.getY(), 10, 10)).stream()
+                        .filter(item -> item.getType().equals(EntityTypeEnum.PUZZLE))
                         .findFirst()
                         .orElse(null);
                 this.recordEntity(clickedEntity);
@@ -93,7 +104,7 @@ public class ClearApplication extends GameApplication {
      * @return 是否消除
      */
     private boolean isDead() {
-        ArrayList<Entity> entityList = FXGL.getGameWorld().getEntities();
+        List<Entity> entityList = FXGL.getGameWorld().getEntitiesByType(EntityTypeEnum.PUZZLE);
         Map<Integer, List<Entity>> map = entityList.stream().collect(Collectors.groupingBy(item -> {
             PropertyMap properties = item.getProperties();
             return properties.getInt("type");
@@ -145,16 +156,6 @@ public class ClearApplication extends GameApplication {
         Entity firstEntity = ENTITY_LIST.get(0);
         Entity secondEntity = ENTITY_LIST.get(1);
 
-        for (Entity entity : ENTITY_LIST) {
-            entity.getViewComponent().getChildren().stream().filter(item -> "bg".equals(item.getId())).forEach(item -> {
-                ImageView bg = (ImageView) item;
-                Image image = new Image("/assets/textures/ui/pic-bg.png");
-                bg.setImage(image);
-                bg.setTranslateX(0);
-                bg.setTranslateY(0);
-            });
-        }
-
         boolean result = this.canConnect(firstEntity, secondEntity);
         if (result) {
             this.handleClear(firstEntity, secondEntity);
@@ -163,6 +164,15 @@ public class ClearApplication extends GameApplication {
             }
         } else {
             FXGL.play("clear_failed.wav");
+            for (Entity entity : ENTITY_LIST) {
+                entity.getViewComponent().getChildren().stream().filter(item -> "bg".equals(item.getId())).forEach(item -> {
+                    ImageView bg = (ImageView) item;
+                    Image image = new Image("/assets/textures/ui/pic-bg.png");
+                    bg.setImage(image);
+                    bg.setTranslateX(0);
+                    bg.setTranslateY(0);
+                });
+            }
         }
         ENTITY_LIST.clear();
         PARENT_MAP.clear();
@@ -202,13 +212,7 @@ public class ClearApplication extends GameApplication {
                 // 判断游戏是否结束
                 int puzzleNum = FXGL.getGameWorld().getEntitiesByType(EntityTypeEnum.PUZZLE).size();
                 if (puzzleNum == 0) {
-                    FXGL.getDialogService().showConfirmationBox("You Win! Play Again?", yes -> {
-                        if (yes) {
-                            this.createGrid();
-                        } else {
-                            FXGL.getGameController().exit();
-                        }
-                    });
+                    this.goToNextLevel();
                 }
             } else {
                 int[] position = path.remove(0);
@@ -217,7 +221,7 @@ public class ClearApplication extends GameApplication {
                 line.setStartY(beforeY.get());
                 line.setEndX(position[1] * ICON_SIZE + ICON_SIZE / 2d + OFFSET_X);
                 line.setEndY(position[0] * ICON_SIZE + ICON_SIZE / 2d + OFFSET_Y);
-                line.setStroke(Color.BLACK);
+                line.setStroke(Color.GREY);
                 line.setStrokeWidth(5);
                 FXGL.getGameScene().addUINode(line);
                 lines.add(line);
@@ -302,7 +306,7 @@ public class ClearApplication extends GameApplication {
      * @return 是否有卡片
      */
     private boolean isBlocked(int row, int col) {
-        for (Entity entity : FXGL.getGameWorld().getEntities()) {
+        for (Entity entity : FXGL.getGameWorld().getEntitiesByType(EntityTypeEnum.PUZZLE)) {
             PropertyMap properties = entity.getProperties();
             if (properties.getInt("row").equals(row) && properties.getInt("col").equals(col)) {
                 return true;
@@ -320,7 +324,8 @@ public class ClearApplication extends GameApplication {
      */
     private void createGrid() {
         LevelEnum levelEnum = LevelEnum.getByLevel(LEVEL++);
-        titleText.setText("第" + levelEnum.getLevel() + "关");
+        titleText.setText("第 " + levelEnum.getLevel() + " 关");
+        titleText.setX((FXGL.getAppWidth() - titleText.getLayoutBounds().getWidth()) / 2);
 
         RandomQueue<Integer> queue = new RandomQueue<>();
         for (int i = 0; i < (GRID_COLS - 2) * (GRID_ROWS - 2); i++) {
@@ -340,7 +345,7 @@ public class ClearApplication extends GameApplication {
      * 重新随机排列
      */
     private void randomAllEntity() {
-        ArrayList<Entity> entityList = FXGL.getGameWorld().getEntities();
+        List<Entity> entityList = FXGL.getGameWorld().getEntitiesByType(EntityTypeEnum.PUZZLE);
         RandomQueue<int[]> queue = new RandomQueue<>();
         for (int i = 1; i < GRID_ROWS - 1; i++) {
             for (int j = 1; j < GRID_COLS - 1; j++) {
@@ -354,5 +359,50 @@ public class ClearApplication extends GameApplication {
             entity.setProperty("col", position[1]);
             entity.setProperty("row", position[0]);
         }
+    }
+
+    private void showTip() {
+        List<Entity> entityList = FXGL.getGameWorld().getEntitiesByType(EntityTypeEnum.PUZZLE);
+        Map<Integer, List<Entity>> map = entityList.stream().collect(Collectors.groupingBy(item -> {
+            PropertyMap properties = item.getProperties();
+            return properties.getInt("type");
+        }));
+        for (Map.Entry<Integer, List<Entity>> entry : map.entrySet()) {
+            List<Entity> list = entry.getValue();
+            for (int i = 0; i < list.size() - 1; i++) {
+                for (int j = 1; j < list.size(); j++) {
+                    Entity firstEntity = list.get(i);
+                    Entity secondEntity = list.get(j);
+                    boolean canConnect = this.canConnect(firstEntity, secondEntity);
+                    if (canConnect) {
+                        Timeline timeline = new Timeline(
+                                new KeyFrame(Duration.millis(0), event -> {
+                                    firstEntity.setScaleUniform(1.0);
+                                    secondEntity.setScaleUniform(1.0);
+                                }),
+                                new KeyFrame(Duration.millis(100), event -> {
+                                    firstEntity.setScaleUniform(1.1);
+                                    secondEntity.setScaleUniform(1.1);
+                                }),
+                                new KeyFrame(Duration.millis(200), event -> {
+                                    firstEntity.setScaleUniform(0.9);
+                                    secondEntity.setScaleUniform(0.9);
+                                }),
+                                new KeyFrame(Duration.millis(300), event -> {
+                                    firstEntity.setScaleUniform(1.0);
+                                    secondEntity.setScaleUniform(1.0);
+                                })
+                        );
+                        timeline.setCycleCount(5);
+                        timeline.play();
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    private void enlarge(Entity entity) {
+        entity.setScaleUniform(1.1);
     }
 }

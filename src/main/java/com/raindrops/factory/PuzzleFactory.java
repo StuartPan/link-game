@@ -1,7 +1,9 @@
 package com.raindrops.factory;
 
 import com.almasb.fxgl.dsl.FXGL;
+import com.almasb.fxgl.dsl.views.ScrollingBackgroundView;
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.entity.components.IrremovableComponent;
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
 import com.raindrops.component.PuzzleComponent;
@@ -28,5 +30,14 @@ public class PuzzleFactory {
         entity.setProperty("col", col);
         entity.setProperty("row", row);
         return entity;
+    }
+
+    public static Entity createBgEntity() {
+        return FXGL.entityBuilder()
+                .view(new ScrollingBackgroundView(FXGL.texture("background/forest.png").getImage(), FXGL.getAppWidth(), FXGL.getAppHeight()))
+                .zIndex(-1)
+                .with(new IrremovableComponent())
+                .type(EntityTypeEnum.BACKGROUND)
+                .build();
     }
 }
