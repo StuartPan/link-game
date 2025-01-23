@@ -8,6 +8,7 @@ import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.components.ViewComponent;
 import com.almasb.fxgl.input.Input;
 import com.raindrops.enums.EntityTypeEnum;
+import com.raindrops.enums.LevelEnum;
 import com.raindrops.factory.PuzzleFactory;
 import com.raindrops.utils.RandomQueue;
 import javafx.animation.KeyFrame;
@@ -42,8 +43,6 @@ public class ClearApplication extends GameApplication {
 
     private static final Map<String, int[]> PARENT_MAP = new HashMap<>();
 
-    private static int puzzleNum = 32;
-
     private static Text titleText;
 
     private static int LEVEL = 1;
@@ -56,18 +55,19 @@ public class ClearApplication extends GameApplication {
     protected void initSettings(GameSettings settings) {
         settings.setTitle("连连看");
         settings.setWidth(1280);
-        settings.setHeight(720);
+        settings.setHeight(960);
         settings.setVersion("1.1");
     }
 
     @Override
     protected void initGame() {
+        Font font = FXGL.getAssetLoader().loadFont("SIMYOU.TTF").newFont(30);
         FXGL.loopBGM("bgm.mp3");
         FXGL.getGameScene().setBackgroundColor(Color.rgb(255, 255, 155));
-        titleText = new Text("第1关");
-        titleText.setFont(new Font(30));
+        titleText = new Text();
+        titleText.setFont(font);
         titleText.setX((FXGL.getAppWidth() - titleText.getLayoutBounds().getWidth()) / 2);
-        titleText.setY((titleText.getLayoutBounds().getWidth() + OFFSET_Y) / 2);
+        titleText.setY(titleText.getLayoutBounds().getHeight() + OFFSET_Y);
         FXGL.getGameScene().addUINode(titleText);
         this.createGrid();
     }
@@ -125,7 +125,7 @@ public class ClearApplication extends GameApplication {
         Optional<Node> bgOptional = viewComponent.getChildren().stream().filter(item -> "bg".equals(item.getId())).findFirst();
         bgOptional.ifPresent(item -> {
             ImageView bg = (ImageView) item;
-            Image image = new Image("/assets/textures/active.png");
+            Image image = new Image("/assets/textures/ui/active.png");
             bg.setImage(image);
             bg.setTranslateX(-18);
             bg.setTranslateY(-18);
@@ -148,7 +148,7 @@ public class ClearApplication extends GameApplication {
         for (Entity entity : ENTITY_LIST) {
             entity.getViewComponent().getChildren().stream().filter(item -> "bg".equals(item.getId())).forEach(item -> {
                 ImageView bg = (ImageView) item;
-                Image image = new Image("/assets/textures/pic-bg.png");
+                Image image = new Image("/assets/textures/ui/pic-bg.png");
                 bg.setImage(image);
                 bg.setTranslateX(0);
                 bg.setTranslateY(0);
@@ -311,15 +311,20 @@ public class ClearApplication extends GameApplication {
         return false;
     }
 
+    private void goToNextLevel() {
+        this.createGrid();
+    }
+
     /**
      * 初始化
      */
     private void createGrid() {
-        titleText.setText("第" + (LEVEL++) + "关");
+        LevelEnum levelEnum = LevelEnum.getByLevel(LEVEL++);
+        titleText.setText("第" + levelEnum.getLevel() + "关");
 
         RandomQueue<Integer> queue = new RandomQueue<>();
         for (int i = 0; i < (GRID_COLS - 2) * (GRID_ROWS - 2); i++) {
-            queue.offer(i % puzzleNum);
+            queue.offer(i % levelEnum.getPuzzleNum());
         }
 
         for (int row = 1; row < GRID_ROWS - 1; row++) {

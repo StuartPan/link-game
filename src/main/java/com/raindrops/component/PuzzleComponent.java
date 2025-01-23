@@ -22,11 +22,11 @@ public class PuzzleComponent extends Component {
      */
     @Override
     public void onAdded() {
-        ImageView backgroundImage = new ImageView(new Image("/assets/textures/pic-bg.png"));
+        ImageView backgroundImage = new ImageView(new Image("/assets/textures/ui/pic-bg.png"));
         backgroundImage.setId("bg");
         entity.getViewComponent().addChild(backgroundImage);
 
-        ImageView puzzleImage = new ImageView(new Image("/assets/textures/" + iconIndex + ".png"));
+        ImageView puzzleImage = new ImageView(new Image("/assets/textures/puzzle/" + iconIndex + ".png"));
         puzzleImage.setTranslateX(8);
         puzzleImage.setTranslateY(8);
         puzzleImage.setId("puzzle");

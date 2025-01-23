@@ -3,3 +3,4 @@
 *.iml
 /system/
 /logs/
+/dist/
