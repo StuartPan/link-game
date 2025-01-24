@@ -11,9 +11,9 @@ import java.util.Random;
  */
 public class RandomQueue<T> {
 
-    private List<T> list;
+    private final List<T> list;
 
-    private Random random;
+    private final Random random;
 
     public RandomQueue() {
         this.list = new ArrayList<>();

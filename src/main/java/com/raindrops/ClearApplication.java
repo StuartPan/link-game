@@ -16,13 +16,14 @@ import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
@@ -44,10 +45,6 @@ public class ClearApplication extends GameApplication {
 
     private static final Map<String, int[]> PARENT_MAP = new HashMap<>();
 
-    private static Text titleText;
-
-    private static int LEVEL = 1;
-
     public static void main(String[] args) {
         launch(args);
     }
@@ -57,29 +54,42 @@ public class ClearApplication extends GameApplication {
         settings.setTitle("连连看");
         settings.setWidth(1280);
         settings.setHeight(720);
-        settings.setVersion("1.1");
+        settings.setVersion("1.2");
     }
 
     @Override
     protected void initGame() {
         Entity entity = PuzzleFactory.createBgEntity();
         FXGL.getGameWorld().addEntity(entity);
-        Font font = FXGL.getAssetLoader().loadFont("SIMYOU.TTF").newFont(40);
         FXGL.loopBGM("bgm.mp3");
-        titleText = new Text();
+        this.createGrid();
+    }
+
+    @Override
+    protected void initUI() {
+        Font font = FXGL.getAssetLoader().loadFont("SIMYOU.TTF").newFont(40);
+        Text titleText = new Text();
+        titleText.setText("第 " + FXGL.getip("level").intValue() + " 关");
         titleText.setFont(font);
+        titleText.setX((FXGL.getAppWidth() - titleText.getLayoutBounds().getWidth()) / 2);
         titleText.setY(titleText.getLayoutBounds().getHeight() + OFFSET_Y);
         FXGL.getGameScene().addUINode(titleText);
 
-        Button button = new Button("提示");
-        button.setLayoutX(OFFSET_X);
-        button.setLayoutY(OFFSET_Y);
-        button.setOnAction(e -> {
-            this.showTip();
+        Image image = new Image("/assets/textures/ui/tips.png");
+        Rectangle tips = new Rectangle(40, 40);
+        tips.setFill(new ImagePattern(image));
+        tips.setOnMouseClicked(e -> this.showTip());
+        tips.setX(TIPS_OFFSET_X);
+        tips.setY(TIPS_OFFSET_Y);
+        tips.setOnMouseEntered(e -> {
+            tips.setScaleX(1.1);
+            tips.setScaleY(1.1);
         });
-        FXGL.getGameScene().addUINode(button);
-
-        this.createGrid();
+        tips.setOnMouseExited(e -> {
+            tips.setScaleX(1);
+            tips.setScaleY(1);
+        });
+        FXGL.addUINode(tips);
     }
 
     @Override
@@ -96,6 +106,11 @@ public class ClearApplication extends GameApplication {
                 this.checkClear();
             }
         });
+    }
+
+    @Override
+    protected void initGameVars(Map<String, Object> vars) {
+        vars.put("level", 1);
     }
 
     /**
@@ -204,7 +219,7 @@ public class ClearApplication extends GameApplication {
         AtomicReference<Double> beforeY = new AtomicReference<>(startRow * ICON_SIZE + ICON_SIZE / 2d + OFFSET_Y);
         Timeline timeline = new Timeline();
         timeline.getKeyFrames().add(new KeyFrame(Duration.millis(30), e -> {
-            if (path.size() == 0) {
+            if (path.isEmpty()) {
                 timeline.stop();
                 lines.forEach(item -> FXGL.getGameScene().removeUINode(item));
                 FXGL.play("clear_success.wav");
@@ -215,7 +230,7 @@ public class ClearApplication extends GameApplication {
                     this.goToNextLevel();
                 }
             } else {
-                int[] position = path.remove(0);
+                int[] position = path.removeFirst();
                 Line line = new Line();
                 line.setStartX(beforeX.get());
                 line.setStartY(beforeY.get());
@@ -316,6 +331,7 @@ public class ClearApplication extends GameApplication {
     }
 
     private void goToNextLevel() {
+        FXGL.inc("level", 1);
         this.createGrid();
     }
 
@@ -323,9 +339,7 @@ public class ClearApplication extends GameApplication {
      * 初始化
      */
     private void createGrid() {
-        LevelEnum levelEnum = LevelEnum.getByLevel(LEVEL++);
-        titleText.setText("第 " + levelEnum.getLevel() + " 关");
-        titleText.setX((FXGL.getAppWidth() - titleText.getLayoutBounds().getWidth()) / 2);
+        LevelEnum levelEnum = LevelEnum.getByLevel(FXGL.getip("level").intValue());
 
         RandomQueue<Integer> queue = new RandomQueue<>();
         for (int i = 0; i < (GRID_COLS - 2) * (GRID_ROWS - 2); i++) {
@@ -335,7 +349,7 @@ public class ClearApplication extends GameApplication {
         for (int row = 1; row < GRID_ROWS - 1; row++) {
             for (int col = 1; col < GRID_COLS - 1; col++) {
                 int iconIndex = queue.poll();
-                Entity entity = PuzzleFactory.createEntity(iconIndex, row, col);
+                Entity entity = PuzzleFactory.createEntity(iconIndex, row, col, levelEnum.getDirection());
                 FXGL.getGameWorld().addEntity(entity);
             }
         }

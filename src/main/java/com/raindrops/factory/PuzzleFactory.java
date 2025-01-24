@@ -18,13 +18,12 @@ import static com.raindrops.constant.CommonConstant.*;
  */
 public class PuzzleFactory {
 
-    public static Entity createEntity(int iconIndex, int row, int col) {
+    public static Entity createEntity(int iconIndex, int row, int col, int direction) {
         Entity entity = FXGL.entityBuilder()
                 .at(OFFSET_X + col * ICON_SIZE, OFFSET_Y + row * ICON_SIZE)
                 .type(EntityTypeEnum.PUZZLE)
-//                .viewWithBBox(FXGL.texture(iconIndex + ".png"))
                 .bbox(new HitBox(BoundingShape.box(ICON_SIZE, ICON_SIZE)))
-                .with(new PuzzleComponent(iconIndex))
+                .with(new PuzzleComponent(iconIndex, direction))
                 .build();
         entity.setProperty("type", iconIndex);
         entity.setProperty("col", col);

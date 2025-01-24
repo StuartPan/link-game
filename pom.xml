@@ -12,7 +12,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
 <!--        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
-        <source.version>11</source.version>
+        <source.version>21</source.version>
     </properties>
 
     <dependencies>
@@ -32,7 +32,9 @@
                 <version>3.8.1</version>
                 <configuration>
                     <release>${source.version}</release>
-<!--                    <encoding>UTF-8</encoding>-->
+                    <source>14</source>
+                    <target>14</target>
+                    <!--                    <encoding>UTF-8</encoding>-->
                 </configuration>
             </plugin>
 
