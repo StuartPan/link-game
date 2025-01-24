@@ -14,7 +14,7 @@ public enum LevelEnum {
     /**
      * 第一关
      */
-    Level1(1, 8, 1),
+    Level1(1, 8, 0),
     /**
      * 第二关
      */
