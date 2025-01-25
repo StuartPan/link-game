@@ -45,6 +45,9 @@ public class ClearApplication extends GameApplication {
 
     private static final Map<String, int[]> PARENT_MAP = new HashMap<>();
 
+    private static Text titleText;
+
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -62,19 +65,18 @@ public class ClearApplication extends GameApplication {
         Entity entity = PuzzleFactory.createBgEntity();
         FXGL.getGameWorld().addEntity(entity);
         FXGL.loopBGM("bgm.mp3");
-        this.createGrid();
-    }
-
-    @Override
-    protected void initUI() {
         Font font = FXGL.getAssetLoader().loadFont("SIMYOU.TTF").newFont(40);
-        Text titleText = new Text();
+        titleText = new Text();
         titleText.setText("第 " + FXGL.getip("level").intValue() + " 关");
         titleText.setFont(font);
         titleText.setX((FXGL.getAppWidth() - titleText.getLayoutBounds().getWidth()) / 2);
         titleText.setY(titleText.getLayoutBounds().getHeight() + OFFSET_Y);
         FXGL.getGameScene().addUINode(titleText);
+        this.createGrid();
+    }
 
+    @Override
+    protected void initUI() {
         Image image = new Image("/assets/textures/ui/tips.png");
         Rectangle tips = new Rectangle(40, 40);
         tips.setFill(new ImagePattern(image));
@@ -340,6 +342,7 @@ public class ClearApplication extends GameApplication {
      */
     private void createGrid() {
         LevelEnum levelEnum = LevelEnum.getByLevel(FXGL.getip("level").intValue());
+        titleText.setText("第 " + FXGL.getip("level").intValue() + " 关");
 
         RandomQueue<Integer> queue = new RandomQueue<>();
         for (int i = 0; i < (GRID_COLS - 2) * (GRID_ROWS - 2); i++) {
