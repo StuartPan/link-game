@@ -92,6 +92,11 @@ public class ClearApplication extends GameApplication {
             tips.setScaleY(1);
         });
         FXGL.addUINode(tips);
+
+//        Rectangle refresh = new Rectangle(40, 40);
+//        refresh.setFill(new ImagePattern(new Image("/assets/textures/ui/refresh.png")));
+//        refresh.setOnMouseClicked(e -> this.randomAllEntity());
+
     }
 
     @Override
@@ -176,9 +181,6 @@ public class ClearApplication extends GameApplication {
         boolean result = this.canConnect(firstEntity, secondEntity);
         if (result) {
             this.handleClear(firstEntity, secondEntity);
-            if (this.isDead()) {
-                FXGL.getDialogService().showMessageBox("无法移动，点击重组...", this::randomAllEntity);
-            }
         } else {
             FXGL.play("clear_failed.wav");
             for (Entity entity : ENTITY_LIST) {
@@ -364,12 +366,7 @@ public class ClearApplication extends GameApplication {
     private void randomAllEntity() {
         List<Entity> entityList = FXGL.getGameWorld().getEntitiesByType(EntityTypeEnum.PUZZLE);
         RandomQueue<int[]> queue = new RandomQueue<>();
-        for (int i = 1; i < GRID_ROWS - 1; i++) {
-            for (int j = 1; j < GRID_COLS - 1; j++) {
-                int[] position = new int[]{i, j};
-                queue.offer(position);
-            }
-        }
+        entityList.forEach(item -> queue.offer(new int[]{item.getProperties().getInt("row"), item.getProperties().getInt("col")}));
         for (Entity entity : entityList) {
             int[] position = queue.poll();
             entity.setPosition(new Point2D(OFFSET_X + position[1] * ICON_SIZE, OFFSET_Y + position[0] * ICON_SIZE));
