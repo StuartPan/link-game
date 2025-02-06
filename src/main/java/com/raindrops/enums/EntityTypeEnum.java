@@ -15,5 +15,15 @@ public enum EntityTypeEnum {
     /**
      * 背景图
      */
-    BACKGROUND
+    BACKGROUND,
+
+    /**
+     * 提示按钮
+     */
+    TIPS,
+
+    /**
+     * 刷新按钮
+     */
+    REFRESH
 }

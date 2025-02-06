@@ -10,6 +10,7 @@ import com.almasb.fxgl.input.Input;
 import com.raindrops.enums.EntityTypeEnum;
 import com.raindrops.enums.LevelEnum;
 import com.raindrops.factory.PuzzleFactory;
+import com.raindrops.factory.UIFactory;
 import com.raindrops.utils.RandomQueue;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -21,7 +22,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -77,26 +77,13 @@ public class ClearApplication extends GameApplication {
 
     @Override
     protected void initUI() {
-        Image image = new Image("/assets/textures/ui/tips.png");
-        Rectangle tips = new Rectangle(40, 40);
-        tips.setFill(new ImagePattern(image));
+        Rectangle tips = UIFactory.createButton(EntityTypeEnum.TIPS);
         tips.setOnMouseClicked(e -> this.showTip());
-        tips.setX(TIPS_OFFSET_X);
-        tips.setY(TIPS_OFFSET_Y);
-        tips.setOnMouseEntered(e -> {
-            tips.setScaleX(1.1);
-            tips.setScaleY(1.1);
-        });
-        tips.setOnMouseExited(e -> {
-            tips.setScaleX(1);
-            tips.setScaleY(1);
-        });
         FXGL.addUINode(tips);
 
-//        Rectangle refresh = new Rectangle(40, 40);
-//        refresh.setFill(new ImagePattern(new Image("/assets/textures/ui/refresh.png")));
-//        refresh.setOnMouseClicked(e -> this.randomAllEntity());
-
+        Rectangle refresh = UIFactory.createButton(EntityTypeEnum.REFRESH);
+        refresh.setOnMouseClicked(e -> this.randomAllEntity());
+        FXGL.addUINode(refresh);
     }
 
     @Override
